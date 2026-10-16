@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dynamic Ambilight System | Kartik Jaiswal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--ink:#f5f5f7;--mut:#a1a1aa;--line:rgba(255,255,255,.15);--panel:rgba(10,10,12,.72);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;cursor:crosshair}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.7 Sora,system-ui,sans-serif;overflow-x:hidden}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:calc(18px + env(safe-area-inset-top,0px)) 6vw 18px;background:linear-gradient(rgba(5,5,5,.9),transparent)}
+nav b{letter-spacing:2px;font-size:14px}
+.back-btn{color:#fff;text-decoration:none;font-size:12px;font-weight:600;border:1px solid var(--line);padding:8px 16px;border-radius:99px;background:rgba(255,255,255,.05);transition:.3s}
+.back-btn:hover{background:#fff;color:#000}
+section{position:relative;z-index:1;min-height:100vh;padding:120px 6vw 80px;display:flex;flex-direction:column;justify-content:center;max-width:1200px;margin:auto}
+.wrap{max-width:520px}.r{margin-left:auto}
+.tag{display:inline-block;align-self:flex-start;border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:6px 14px;font-size:11px;letter-spacing:2px;margin-bottom:20px;text-transform:uppercase}
+h1{font-size:clamp(40px,6vw,72px);line-height:1;font-weight:800;letter-spacing:-2px;margin-bottom:20px}
+h2{font-size:clamp(30px,4vw,44px);line-height:1.1;font-weight:800;letter-spacing:-1px;margin-bottom:14px}
+p{color:var(--mut);margin-bottom:14px;font-size:15px}
+.panel{background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;padding:28px;margin-top:22px}
+.panel h3{color:#fff;margin-bottom:8px;font-size:16px}
+.num{font-size:12px;letter-spacing:3px;color:#fff;opacity:.6;margin-bottom:10px}
+.spec{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.spec span{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:4px 12px;color:#fff;background:rgba(255,255,255,.05)}
+.hint{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:10;font-size:11px;letter-spacing:3px;color:var(--mut);text-transform:uppercase;transition:opacity .5s;pointer-events:none}
+.hud{position:fixed;left:6vw;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:10;display:flex;gap:12px;align-items:center;background:rgba(10,10,12,.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:11px;letter-spacing:1px}.hud i{width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.4)}.hud b{display:block;font-size:10px;letter-spacing:3px;opacity:.7}.hud span{font-family:monospace;font-size:13px}
+.bar{position:fixed;left:0;top:0;height:2px;background:#fff;z-index:11;width:0}
+.photo{margin-top:18px;border:1px solid rgba(255,255,255,.2);border-radius:16px;overflow:hidden;background:#111}
+.photo img{width:100%;height:auto;display:block}
+@media(max-width:800px){.r{margin-left:0}.wrap{max-width:100%}.panel{background:rgba(8,8,10,.85)}}
+
+/* ---- ULTRA-PREMIUM AMBILIGHT INTRO ---- */
+#intro{position:fixed;inset:0;z-index:100;background:#030303;display:flex;align-items:center;justify-content:center;animation:iv 1s cubic-bezier(0.8,0,0.2,1) 3.5s forwards}
+@keyframes iv{to{opacity:0;visibility:hidden;transform:scale(1.2);filter:blur(10px)}}
+
+.ambi-wrap{position:relative;width:240px;height:140px;display:flex;align-items:center;justify-content:center}
+.ambi-screen{position:absolute;inset:0;background:#08080a;border-radius:10px;border:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;box-shadow:inset 0 0 30px rgba(0,0,0,0.9)}
+.ambi-glow{position:absolute;inset:10px;border-radius:10px;z-index:1;opacity:0;animation:ambiBloom 2.8s cubic-bezier(0.4,0,0.2,1) 0.2s forwards}
+
+@keyframes ambiBloom{
+    0%{opacity:1;box-shadow:0 0 0 0 transparent}
+    15%{opacity:1;box-shadow:0 -40px 50px -10px rgba(255,0,85,0.8)}
+    30%{opacity:1;box-shadow:0 -40px 50px -10px rgba(255,0,85,0.8), 40px 0 50px -10px rgba(0,255,170,0.8)}
+    45%{opacity:1;box-shadow:0 -40px 50px -10px rgba(255,0,85,0.8), 40px 0 50px -10px rgba(0,255,170,0.8), 0 40px 50px -10px rgba(0,136,255,0.8)}
+    60%{opacity:1;box-shadow:0 -40px 50px -10px rgba(255,0,85,0.8), 40px 0 50px -10px rgba(0,255,170,0.8), 0 40px 50px -10px rgba(0,136,255,0.8), -40px 0 50px -10px rgba(255,170,0,0.8)}
+    80%{opacity:1;box-shadow:0 0 80px 20px rgba(255,255,255,0.8), 0 0 120px 40px rgba(0,150,255,0.5)}
+    100%{opacity:0;transform:scale(1.1);box-shadow:0 0 100px 40px rgba(255,255,255,0)}
+}
+
+#intro b{letter-spacing:.3em;margin-right:-.3em;font-size:20px;color:#fff;opacity:0;animation:fadeUp .6s ease 0.6s forwards;text-shadow:0 2px 10px rgba(0,0,0,0.5)}
+#intro small{letter-spacing:.2em;margin-right:-.2em;font-size:10px;color:var(--mut);opacity:0;animation:fadeUp .6s ease 1.2s forwards;margin-top:10px;font-family:monospace}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+nav{animation:nv 1s ease 3.8s both}@keyframes nv{from{opacity:0;transform:translateY(-14px)}}
+section > *{animation:up .8s ease 3.7s both}
+@keyframes up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#intro{display:none} nav, section > *{animation:none}}
+/* ---------------------------------- */
+</style>
+</head>
+<body>
+
+<!-- --- ULTRA-PREMIUM AMBILIGHT INTRO --- -->
+<div id="intro">
+    <div class="ambi-wrap">
+        <div class="ambi-glow"></div>
+        <div class="ambi-screen">
+            <b>ESP32</b>
+            <small>AMBILIGHT SYNC</small>
+        </div>
+    </div>
+</div>
+<!-- ------------------------------------- -->
+
+<div class="bar" id="bar"></div>
+<canvas id="gl"></canvas>
+<nav><b>KARTIK.DEV</b><a href="index.html" class="back-btn">← Back to Portfolio</a></nav>
+<div class="hud"><i id="sw"></i><div><b>LIVE RGB SYNC</b><span id="rgbtx">R 0  G 0  B 0</span></div></div>
+<div class="hint" id="hint">Scroll to explore ↓</div>
+
+<section><div class="wrap">
+<span class="tag">Hardware &amp; Software Integration</span>
+<h1>Dynamic Ambilight System</h1>
+<p style="font-size:18px;color:#fff">A custom ESP32-controlled lighting system that captures video output and changes room LED colours in real time.</p>
+<div class="panel"><h3>The Concept</h3><p style="margin:0">Commercial Ambilight systems are expensive and locked to specific ecosystems. I built a fully programmable alternative around an <strong style="color:#fff">ESP32</strong>: the screen's edge colours are captured frame by frame and streamed to the board. The ESP32 drives RGB LEDs behind the monitor: whatever colour appears on the screen lights up the same colour on the LEDs, always in sync with the display.</p></div>
+</div></section>
+
+<section><div class="wrap r">
+<div class="num">01 — CAPTURE</div><h2>Screen Capture</h2>
+<p>A desktop script grabs the screen edges continuously and calculates the dominant RGB value for the top, bottom, left and right zones of every frame.</p>
+<div class="spec"><span>Edge sampling</span><span>Per-frame</span><span>4 zones</span></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="num">02 — TRANSPORT</div><h2>Data Processing</h2>
+<p>The colour values are packed into a compact byte stream and pushed through the USB serial port — fast enough that the CPU never notices. Watch the packets travel along the cable.</p>
+<div class="spec"><span>USB / COM</span><span>Compact frames</span><span>Zero lag</span></div>
+</div></section>
+
+<section><div class="wrap r">
+<div class="num">03 — BRAIN</div><h2>ESP32 Microcontroller</h2>
+<p>The dual-core ESP32 decodes the incoming serial stream instantly and maps each colour to its zone of the LED strip.</p>
+<div class="panel"><h3>On the board</h3><p style="margin:0">Metal-shielded WROOM module with PCB antenna, USB-to-serial bridge, EN and BOOT buttons, and 2×19 pin headers seated on a breadboard.</p></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="num">04 — OUTPUT</div><h2>Addressable LEDs</h2>
+<p>The RGB (WS2812B) strip behind the monitor is split into zones. Each LED copies the colour of the screen area in front of it, so the wall glow always matches what is on screen. Check the live RGB readout at the bottom left.</p>
+<div class="spec"><span>RGB WS2812B</span><span>Per-zone sync</span><span>Live colour</span></div>
+</div></section>
+
+<section><div class="wrap r">
+<div class="num">05 — REAL BUILD</div><h2>The Actual Setup</h2>
+<p>Drag the scene with your mouse — the whole system is yours to inspect.</p>
+<div class="photo"><img src="ambilight-setup.jpg" alt="ESP32 Ambilight personal setup" onerror="this.parentNode.style.display='none'"></div>
+</div></section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+var T=THREE,cv=document.getElementById('gl');
+var renderer=new T.WebGLRenderer({canvas:cv,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x050505);
+var scene=new T.Scene();scene.fog=new T.Fog(0x050505,16,46);
+var camera=new T.PerspectiveCamera(45,innerWidth/innerHeight,.1,100);
+scene.add(new T.AmbientLight(0xffffff,.55));
+var key=new T.DirectionalLight(0xffffff,1.1);key.position.set(5,10,6);scene.add(key);
+var rim=new T.PointLight(0xffffff,.6,14);rim.position.set(-3,3,-3);scene.add(rim);
+
+function M(c,r,m,o){var p={color:c,roughness:r==null?.5:r,metalness:m==null?.3:m};for(var k in o)p[k]=o[k];return new T.MeshStandardMaterial(p)}
+function bx(g,w,h,d,x,y,z,mat){var m=new T.Mesh(new T.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);g.add(m);return m}
+function texPlane(w,h,draw,cw,ch){var c=document.createElement('canvas');c.width=cw;c.height=ch;draw(c.getContext('2d'));return new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}))}
+
+/* ---------- ground ---------- */
+var grid=new T.GridHelper(60,60,0x333333,0x151515);grid.position.y=-.31;scene.add(grid);
+
+/* ---------- ESP32 on breadboard ---------- */
+var hw=new T.Group();scene.add(hw);
+var white=M(0xe8e8e8,.8,0),silver=M(0xc8c8cc,.25,.9),pcbM=M(0x0b0b0d,.5,.3),blk=M(0x151517,.6,.2),pin=M(0xdcdcdc,.2,1);
+bx(hw,3.8,.3,5.8,0,-.15,0,white);
+bx(hw,.3,.02,5.8,0,.005,0,M(0x999999));
+bx(hw,.1,.02,5.8,-1.75,.005,0,M(0x777777));bx(hw,.1,.02,5.8,1.75,.005,0,M(0x777777));
+var esp=new T.Group();hw.add(esp);
+bx(esp,2.4,.08,4.8,0,.14,0,pcbM);
+bx(esp,1.7,.14,1.9,0,.25,-1.0,silver);
+var lab=texPlane(1.4,1.4,function(c){c.fillStyle='#c8c8cc';c.fillRect(0,0,256,256);c.fillStyle='#111';c.font='bold 46px Sora,sans-serif';c.textAlign='center';c.fillText('ESP32',128,100);c.font='24px Sora,sans-serif';c.fillText('WROOM-32',128,140);c.fillRect(70,170,116,3);c.font='16px monospace';c.fillText('2.4GHz WiFi + BT',128,205)},256,256);
+lab.rotation.x=-Math.PI/2;lab.position.set(0,.33,-1.0);esp.add(lab);
+var ant=M(0xaaaaaa,.3,.8);
+for(var i=0;i<3;i++)bx(esp,1.5,.02,.07,0,.19,-2.08-i*.14,ant);
+bx(esp,.07,.02,.28,-.75,.19,-2.22,ant);bx(esp,.07,.02,.28,.75,.19,-2.22,ant);
+bx(esp,.9,.28,.7,0,.32,2.2,silver);bx(esp,.7,.12,.3,0,.32,2.5,M(0x000000));
+bx(esp,.55,.08,.55,0,.22,1.15,blk);
+[-.7,.7].forEach(function(x,i){bx(esp,.4,.12,.4,x,.24,1.7,M(0x999999,.3,.8));bx(esp,.2,.1,.2,x,.32,1.7,blk);
+ var l=texPlane(.5,.2,function(c){c.fillStyle='#ddd';c.font='bold 40px monospace';c.textAlign='center';c.fillText(i?'BOOT':'EN',64,40)},128,48);l.rotation.x=-Math.PI/2;l.position.set(x,.19,1.35);esp.add(l)});
+var statusM=M(0xffffff,.3,0,{emissive:0xffffff,emissiveIntensity:1});bx(esp,.12,.05,.2,.55,.2,.55,statusM);
+[-1,1].forEach(function(s){bx(esp,.2,.12,4.3,s*1.1,.22,0,blk);
+ for(var i=0;i<19;i++){bx(esp,.07,.5,.07,s*1.1,.12,-2.0+i*.222,pin)}});
+for(var j=0;j<2;j++)for(var i=0;i<30;i++){bx(hw,.05,.01,.05,(j?1:-1)*1.45,.012,-2.7+i*.18,M(0x222222))}
+hw.position.y=0;
+
+/* ---------- monitor + LED frame ---------- */
+var mon=new T.Group();mon.position.set(9,0,-1);scene.add(mon);
+var dark=M(0x0c0c0e,.4,.6);
+bx(mon,5.3,3.1,.14,0,2.3,0,dark);bx(mon,.3,.8,.15,0,.4,-.15,dark);bx(mon,1.6,.06,.9,0,.03,.1,dark);
+var sc=document.createElement('canvas');sc.width=128;sc.height=72;var sx=sc.getContext('2d',{willReadFrequently:true});
+var scTex=new T.CanvasTexture(sc);
+var scr=new T.Mesh(new T.PlaneGeometry(5,2.8),new T.MeshBasicMaterial({map:scTex}));scr.position.set(0,2.3,.08);mon.add(scr);
+var tmp=document.createElement('canvas');tmp.width=tmp.height=1;var tx=tmp.getContext('2d',{willReadFrequently:true});
+var segs=[],segSide=[],segReg=[],SIDES=['top','bottom','left','right'],sideLight={},sideGlow={};
+function addSeg(x,y,w,h,side,r){var m=M(0x222222,.3,0,{emissive:0x000000,emissiveIntensity:1.3});bx(mon,w,h,.07,x,y,-.12,m);segs.push(m);segSide.push(side);segReg.push(r)}
+var NX=16,NY=9;
+for(var i=0;i<NX;i++){var w=5.2/NX,x=-2.6+w*(i+.5);addSeg(x,3.92,w*.88,.11,0,[i*8,0,8,8]);addSeg(x,.68,w*.88,.11,1,[i*8,64,8,8])}
+for(var j=0;j<NY;j++){var hh=3.1/NY,y=3.85-(j+.5)*hh;addSeg(-2.68,y,.11,hh*.88,2,[0,j*8,8,8]);addSeg(2.68,y,.11,hh*.88,3,[120,j*8,8,8])}
+var wall=new T.Mesh(new T.PlaneGeometry(30,14),M(0x1a1a1c,.9,0));wall.position.set(0,5.5,-1.7);mon.add(wall);
+var lp={top:[0,3.8,-1.1],bottom:[0,.8,-1.1],left:[-2.6,2.3,-1.1],right:[2.6,2.3,-1.1]};
+var gp={top:[0,4.2,-1.6,9,4],bottom:[0,.4,-1.6,9,4],left:[-3.4,2.3,-1.6,4,6],right:[3.4,2.3,-1.6,4,6]};
+var glowTex=(function(){var c=document.createElement('canvas');c.width=c.height=256;var x=c.getContext('2d'),g=x.createRadialGradient(128,128,8,128,128,128);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,256,256);return new T.CanvasTexture(c)})();
+SIDES.forEach(function(s){var l=new T.PointLight(0xffffff,0,13);l.position.set(lp[s][0],lp[s][1],lp[s][2]);mon.add(l);sideLight[s]=l;
+ var q=gp[s],gm=new T.Mesh(new T.PlaneGeometry(q[3],q[4]),new T.MeshBasicMaterial({map:glowTex,transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false}));gm.position.set(q[0],q[1],q[2]);mon.add(gm);sideGlow[s]=gm});
+
+/* ---------- cables + data packets ---------- */
+function tube(curve,col,r){var m=new T.Mesh(new T.TubeGeometry(curve,64,r,8,false),M(col,.6,.1));scene.add(m);return m}
+var usb=new T.CatmullRomCurve3([new T.Vector3(8.6,.1,-.7),new T.Vector3(6.5,.1,3),new T.Vector3(2.5,.1,4.8),new T.Vector3(0,.3,3.8),new T.Vector3(0,.32,2.5)]);
+tube(usb,0x1c1c1e,.07);
+var data=new T.CatmullRomCurve3([new T.Vector3(1.4,.3,-.4),new T.Vector3(3,1.6,-.8),new T.Vector3(6,1.3,-2.2),new T.Vector3(8.8,.9,-2.5)]);
+var wires=[[0xffffff,0],[0x888888,.12],[0xcccccc,-.12]];
+wires.forEach(function(w){var off=w[1],pts=data.getPoints(6).map(function(p){return p.clone().add(new T.Vector3(0,0,off))});tube(new T.CatmullRomCurve3(pts),w[0],.04)});
+var pkM=new T.MeshBasicMaterial({color:0xffffff}),pk1=[],pk2=[];
+for(var i=0;i<8;i++){var a=new T.Mesh(new T.SphereGeometry(.08,12,12),pkM);scene.add(a);pk1.push(a);var b=new T.Mesh(new T.SphereGeometry(.06,12,12),pkM);scene.add(b);pk2.push(b)}
+
+/* ---------- camera path ---------- */
+function V(x,y,z){return new T.Vector3(x,y,z)}
+var K=[
+ {p:V(3.2,4.6,8.5),l:V(-1.2,0,0)},
+ {p:V(9.6,2.4,7.5),l:V(10.8,1.6,-1)},
+ {p:V(4.6,3.8,6),l:V(3.2,.6,0)},
+ {p:V(-.4,3.6,3),l:V(1.1,0,-.6)},
+ {p:V(9.6,1.8,5.5),l:V(7.4,1.5,-1.5)},
+ {p:V(4.5,6,14),l:V(4.5,.5,-1)}];
+function sm(x){return x*x*(3-2*x)}
+var cl=V(0,0,0),tp=V(0,0,0),tl=V(0,0,0),mx=0,my=0;
+camera.position.copy(K[0].p);cl.copy(K[0].l);
+addEventListener('pointermove',function(e){mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+addEventListener('resize',function(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+var frm=0,hudSw=document.getElementById('sw'),hudTx=document.getElementById('rgbtx'),bar=document.getElementById('bar'),hint=document.getElementById('hint'),clock=new T.Clock(),tm=new T.Vector3();
+
+function loop(){
+ requestAnimationFrame(loop);var t=clock.getElapsedTime();
+ var mxS=document.documentElement.scrollHeight-innerHeight,p=mxS>0?scrollY/mxS:0;
+ bar.style.width=(p*100)+'%';hint.style.opacity=scrollY>40?0:1;
+ var f=p*(K.length-1),i=Math.min(K.length-2,Math.floor(f)),u=sm(f-i);
+ tp.lerpVectors(K[i].p,K[i+1].p,u);tl.lerpVectors(K[i].l,K[i+1].l,u);
+ if(innerWidth<800){tl.y-=1.6}
+ tp.x+=mx*1.2;tp.y-=my*.8;
+ camera.position.lerp(tp,.06);cl.lerp(tl,.06);camera.lookAt(cl);
+ esp.position.y=Math.sin(t*1.4)*.06;
+ statusM.emissiveIntensity=.4+.6*(Math.sin(t*9)>0?1:0);
+ /* animated screen content */
+ var h0=(t*22)%360,g=sx.createLinearGradient(0,0,128,72);g.addColorStop(0,'hsl('+h0+',85%,38%)');g.addColorStop(1,'hsl('+((h0+130)%360)+',85%,18%)');sx.fillStyle=g;sx.fillRect(0,0,128,72);
+ for(var k=0;k<6;k++){var cx=64+60*Math.sin(t*(.45+k*.27)+k),cy=36+32*Math.cos(t*(.6+k*.21)+k*2),r=9+7*Math.sin(t+k);
+  sx.fillStyle='hsl('+((h0+k*58+t*30)%360)+',95%,55%)';sx.beginPath();sx.arc(cx,cy,r,0,6.283);sx.fill()}
+ scTex.needsUpdate=true;
+ var d=sx.getImageData(0,0,128,72).data,acc=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],R=0,G=0,B=0;
+ for(var n=0;n<segs.length;n++){var q=segReg[n],rr=0,gg=0,bb=0;
+  for(var yy=q[1];yy<q[1]+q[3];yy++)for(var xx=q[0];xx<q[0]+q[2];xx++){var o=(yy*128+xx)*4;rr+=d[o];gg+=d[o+1];bb+=d[o+2]}
+  var c=q[2]*q[3]*255;rr/=c;gg/=c;bb/=c;segs[n].emissive.setRGB(rr,gg,bb);
+  var a2=acc[segSide[n]];a2[0]+=rr;a2[1]+=gg;a2[2]+=bb;a2[3]++;R+=rr;G+=gg;B+=bb}
+ SIDES.forEach(function(s,i){var a2=acc[i],cr=a2[0]/a2[3],cg=a2[1]/a2[3],cb=a2[2]/a2[3];sideLight[s].color.setRGB(cr,cg,cb);sideLight[s].intensity=3.5;sideGlow[s].material.color.setRGB(cr,cg,cb);sideGlow[s].material.opacity=.55});
+ if((frm++)%4==0){var m=segs.length,r8=Math.round(R/m*255),g8=Math.round(G/m*255),b8=Math.round(B/m*255);hudSw.style.background='rgb('+r8+','+g8+','+b8+')';hudSw.style.boxShadow='0 0 24px rgb('+r8+','+g8+','+b8+')';hudTx.textContent='R '+r8+'  G '+g8+'  B '+b8}
+ /* packets */
+ for(var n=0;n<8;n++){var s1=((t*.22+n/8)%1);usb.getPoint(s1,tm);pk1[n].position.copy(tm);var s2=((t*.35+n/8)%1);data.getPoint(s2,tm);pk2[n].position.copy(tm);var sc2=.6+.8*Math.sin(s2*3.14);pk2[n].scale.setScalar(sc2)}
+ renderer.render(scene,camera);
+}
+loop();
+</script>
+</body>
+</html>

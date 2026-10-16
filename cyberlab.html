@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cybersecurity Labs | Kartik Jaiswal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070709;
+  --ink:#f5f5f7;
+  --mut:#b4b4be;
+  --line:rgba(255,255,255,.22);
+  --panel:rgba(10,10,14,.86);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@media(pointer:fine){*{cursor:none!important}}
+@media(pointer:coarse){#cur,#halo{display:none!important}}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font:400 15px/1.65 Sora,system-ui,sans-serif;
+  overflow-x:hidden;
+}
+
+/* 3D Canvas strictly in background and non-clickable */
+canvas#gl{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  z-index:0;
+  pointer-events:none !important;
+}
+
+/* Restored Original Bright Glow Cursor & Halo */
+#cur{
+  position:fixed;
+  left:-100px;
+  top:-100px;
+  width:10px;
+  height:10px;
+  margin:-5px 0 0 -5px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 10px 3px #fff,0 0 25px 8px rgba(255,255,255,.7),0 0 50px 16px rgba(255,255,255,.3);
+  z-index:9999;
+  pointer-events:none !important;
+  transition:width .2s,height .2s,margin .2s;
+}
+#halo{
+  position:fixed;
+  left:-200px;
+  top:-200px;
+  width:80px;
+  height:80px;
+  margin:-40px 0 0 -40px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,.1) 55%,transparent 75%);
+  z-index:9998;
+  pointer-events:none !important;
+  transition:width .25s,height .25s,margin .25s;
+}
+body.hv #cur{width:16px;height:16px;margin:-8px 0 0 -8px}
+body.hv #halo{width:130px;height:130px;margin:-65px 0 0 -65px}
+
+nav{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:20;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 6vw;
+  background:linear-gradient(rgba(7,7,9,.92),transparent);
+}
+nav b{letter-spacing:.2em;font-size:13px}
+.back{
+  color:#fff;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:600;
+  border:1px solid var(--line);
+  padding:8px 18px;
+  border-radius:99px;
+  background:rgba(12,12,16,.8);
+  transition:.25s;
+  cursor:pointer;
+}
+.back:hover{background:#fff;color:#000;box-shadow:0 0 25px rgba(255,255,255,.45)}
+
+/* --- CENTERED HEADER STYLES --- */
+.top-header {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  max-width: 860px;
+  margin: 100px auto 20px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tag-top{
+  display:inline-block;
+  border:1px solid var(--line);
+  border-radius:99px;
+  padding:5px 14px;
+  font:600 11px 'JetBrains Mono',monospace;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+  background:rgba(10,10,14,.8);
+  color:#fff;
+}
+h1{
+  font-size:clamp(32px,4.5vw,52px);
+  font-weight:800;
+  letter-spacing:-2px;
+  line-height:1.04;
+  text-shadow:0 2px 24px #000;
+  margin-bottom:14px;
+}
+.lead{
+  color:var(--mut);
+  margin-bottom:30px;
+  max-width: 650px;
+  text-shadow:0 1px 10px #000;
+}
+
+/* Centered Tabs with Increased Gap */
+.tabs{
+  display:flex;
+  gap:28px; /* Increased gap here */
+  justify-content:center;
+  flex-wrap:wrap;
+  width: 100%;
+}
+.tab{
+  background:rgba(12,12,16,.82);
+  border:1px solid var(--line);
+  color:var(--mut);
+  padding:11px 24px;
+  border-radius:99px;
+  font:600 13px Sora,sans-serif;
+  transition:background .22s,color .22s,border-color .22s,box-shadow .22s;
+  backdrop-filter:blur(10px);
+  cursor:pointer;
+}
+.tab:hover,.tab.on{
+  background:#fff;
+  border-color:#fff;
+  color:#000;
+  box-shadow:0 0 25px rgba(255,255,255,.35);
+}
+
+/* Left-Aligned Lab Details Content */
+main{
+  position:relative;
+  z-index:5;
+  width:min(500px, 40vw); /* Made slightly narrower to give 3D model more room */
+  margin-left:6vw;
+  padding:20px 0 80px;
+  text-align:left;
+}
+
+/* Lab Panel Style */
+.tp{
+  position:relative;
+  overflow:hidden;
+  display:none;
+  background:var(--panel);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:26px;
+  color:var(--mut);
+  box-shadow:0 24px 60px rgba(0,0,0,.78);
+  transition:border-color .3s;
+}
+.tp:hover{border-color:rgba(255,255,255,.45)}
+.tp.on{display:block}
+
+.tp h2{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:-.5px;
+  color:#fff;
+  margin-bottom:6px;
+}
+.tp h3{
+  font-size:12px;
+  color:#fff;
+  margin:14px 0 4px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.tp p+p{margin-top:8px}
+.tp strong{color:#fff}
+.tp ol{padding-left:18px;margin-top:4px}
+.tp li{margin-top:4px}
+
+.demo{
+  position:relative;
+  z-index:10;
+  margin-top:18px;
+  border-top:1px solid var(--line);
+  padding-top:16px;
+}
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.btn{
+  position:relative;
+  z-index:10;
+  background:#fff;
+  color:#09090c;
+  border:1px solid #fff;
+  padding:10px 20px;
+  border-radius:99px;
+  font:700 13px Sora,sans-serif;
+  transition:background .2s,color .2s,box-shadow .2s;
+  cursor:pointer;
+  user-select:none;
+}
+.btn:hover{box-shadow:0 0 25px rgba(255,255,255,.55)}
+.btn.o{
+  background:rgba(16,16,22,.85);
+  color:#fff;
+  border:1px solid var(--line);
+}
+.btn.o:hover{border-color:#fff;background:rgba(255,255,255,.14)}
+.btn.danger{
+  background:rgba(255,59,92,.15);
+  color:#ff5c77;
+  border:1px solid rgba(255,59,92,.5);
+}
+.btn.danger:hover{
+  background:#ff3b5c;
+  color:#fff;
+  border-color:#ff3b5c;
+  box-shadow:0 0 25px rgba(255,59,92,.6);
+}
+
+input{
+  position:relative;
+  z-index:10;
+  flex:1;
+  min-width:180px;
+  background:rgba(0,0,0,.65);
+  border:1px solid var(--line);
+  padding:10px 15px;
+  border-radius:12px;
+  color:#fff;
+  font:14px 'JetBrains Mono',monospace;
+}
+input:focus{border-color:#fff;outline:none;box-shadow:0 0 18px rgba(255,255,255,.15)}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin:14px 0 6px;
+  text-align:center;
+}
+.stat-box{
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:9px 12px;
+}
+.stat-box b{
+  display:block;
+  font-size:24px;
+  color:#fff;
+  font-weight:800;
+  line-height:1.1;
+  font-family:'JetBrains Mono',monospace;
+}
+.stat-box span{
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--mut);
+}
+
+.con{
+  position:relative;
+  z-index:10;
+  background:#040407;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  font:12px/1.6 'JetBrains Mono',monospace;
+  color:#e8e8ee;
+  height:160px;
+  overflow-y:auto;
+  word-break:break-all;
+  box-shadow:inset 0 4px 20px rgba(0,0,0,.85);
+  text-align:left;
+}
+.con p{margin:0 0 5px}
+.con .d{color:#7c7c8a}
+.con .w{color:#fff;font-weight:700}
+.con .al{color:#ff5c77;font-weight:700}
+.con .ok{color:#33ff99}
+
+.meter{
+  height:8px;
+  border-radius:9px;
+  background:rgba(255,255,255,.1);
+  margin-top:10px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+}
+.meter i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#33ff99,#ffcc00,#ff3b5c);
+  transition:width .6s cubic-bezier(.2,.8,.2,1);
+}
+
+.chips{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.chips button{
+  position:relative;
+  z-index:10;
+  font:11px 'JetBrains Mono',monospace;
+  color:var(--mut);
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:5px 10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.chips button:hover{color:#000;background:#fff;border-color:#fff}
+
+.hint3d{
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--mut);
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  opacity:.8;
+}
+
+/* ---- SECURE VAULT INTRO ANIMATION ---- */
+#intro-vault { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
+.shutter { position: absolute; left: 0; right: 0; height: 50%; background: #070709; animation: 0.8s cubic-bezier(0.8,0,0.2,1) 2.2s forwards; }
+.shutter.top { top: 0; border-bottom: 1px solid rgba(51,255,153,0.5); animation-name: sTop; }
+.shutter.bot { bottom: 0; border-top: 1px solid rgba(51,255,153,0.5); animation-name: sBot; }
+@keyframes sTop { to { transform: translateY(-100%); } }
+@keyframes sBot { to { transform: translateY(100%); } }
+
+.auth-box {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center;
+    background: #070709; padding: 12px 24px; border: 1px solid #33ff99;
+    color: #33ff99; font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 4px; font-weight: bold;
+    box-shadow: 0 0 20px rgba(51,255,153,0.2);
+    animation: authOut 0.4s ease 2s forwards;
+}
+.auth-msg::before {
+    content: "VERIFYING...";
+    animation: textSwitch 2s steps(1) forwards;
+}
+@keyframes textSwitch {
+    0% { content: "VERIFYING..."; color: #b4b4be; }
+    35% { content: "DECRYPTING..."; color: #b4b4be; }
+    70% { content: "ACCESS GRANTED"; color: #33ff99; }
+}
+@keyframes authOut {
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.1); visibility: hidden; }
+}
+
+nav { animation: nv 0.8s ease 2.4s both; }
+@keyframes nv { from { opacity: 0; transform: translateY(-14px); } }
+
+/* Entrance Animations - Delay Bug Fixed Here */
+.top-header > * { animation: up 0.8s ease 2.3s both; }
+main { animation: up 0.8s ease 2.6s both; } /* Applied to main directly so it doesn't re-trigger on tab switch */
+@keyframes up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+
+@media(prefers-reduced-motion: reduce) { #intro-vault { display: none; } nav, .top-header > *, main { animation: none; } }
+
+@media(max-width:860px){
+  main{margin:20px auto 0;width:92vw;padding:20px 0 60px}
+  .stats{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- --- SECURE VAULT INTRO --- -->
+<div id="intro-vault">
+    <div class="shutter top"></div>
+    <div class="shutter bot"></div>
+    <div class="auth-box">
+        <span class="auth-msg"></span>
+    </div>
+</div>
+<!-- -------------------------- -->
+
+<div id="cur"></div>
+<div id="halo"></div>
+<canvas id="gl"></canvas>
+
+<nav>
+  <b>KARTIK.DEV</b>
+  <a class="back" href="index.html">← Back to Portfolio</a>
+</nav>
+
+<!-- --- CENTERED TOP HEADER --- -->
+<div class="top-header">
+  <span class="tag-top">Interactive 3D Security Operations</span>
+  <h1>Cybersecurity Labs</h1>
+  <p class="lead">Three core pillars of network defense rendered as interactive 3D hardware &amp; holographic systems. Select a module below and run live simulations.</p>
+
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab on" role="tab" id="t0">01 // Firewall Gate</button>
+    <button type="button" class="tab" role="tab" id="t1">02 // Threat Geo-Radar</button>
+    <button type="button" class="tab" role="tab" id="t2">03 // Crypto Gyro-Vault</button>
+  </div>
+</div>
+
+<!-- --- LEFT-ALIGNED DETAILS PANEL --- -->
+<main>
+  <!-- LAB 1: FIREWALL GATE -->
+  <section class="tp on" id="p0">
+    <h2>Firewall &amp; Packet Interceptor</h2>
+    <h3>Architecture</h3>
+    <p>A network firewall inspects every incoming data packet header (Source IP, Destination Port, TCP/UDP flags). Legitimate HTTPS traffic on <strong>Port 443</strong> passes through the central hexagonal shield gate, while unauthorized scans and <strong>SYN-Flood DDoS attacks</strong> are deflected by the perimeter laser matrix.</p>
+    <h3>Interactive Controls</h3>
+    <ol>
+      <li>Click <strong>Send Normal Traffic</strong> to stream verified TCP/443 data cubes through the 3D shield gate.</li>
+      <li>Click <strong>Simulate DDoS Attack</strong> to trigger a high-velocity flood of malicious red packets and watch the firewall deflect them in real time.</li>
+    </ol>
+    <div class="demo">
+      <div class="row">
+        <button type="button" class="btn" id="btnNorm">▶ Send Normal Traffic</button>
+        <button type="button" class="btn danger" id="btnAtk">⚡ Simulate DDoS Attack</button>
+        <button type="button" class="btn o" id="btnRst">↺ Reset</button>
+      </div>
+      <div class="stats">
+        <div class="stat-box"><b id="sA">0</b><span>Allowed (443)</span></div>
+        <div class="stat-box"><b id="sB">0</b><span>Blocked / Dropped</span></div>
+        <div class="stat-box"><b id="sSt">IDLE</b><span>Gate Status</span></div>
+      </div>
+      <div class="con" id="c0">
+        <p class="d">[SYS_INIT] Perimeter Firewall online. Rules: ALLOW tcp/80,443 | DROP tcp/23 | RATE_LIMIT 100 pkt/s.</p>
+      </div>
+      <div class="hint3d">
+        <span>ACTIVE MODULE: 01 // FIREWALL GATE</span>
+        <span>MODEL: AEGIS-SHIELD v2</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAB 2: THREAT GEO-RADAR -->
+  <section class="tp" id="p1">
+    <h2>Global Threat Intelligence Radar</h2>
+    <h3>Architecture</h3>
+    <p>When anomalous requests hit a server, SOC analysts query <strong>GeoIP, ASN, and AbuseIPDB</strong> feeds to fingerprint the attacker's origin, hosting provider, and botnet reputation score before pushing an automated block rule.</p>
+    <h3>Interactive Controls</h3>
+    <ol>
+      <li>Select a suspicious IP chip below or type any IPv4 address.</li>
+      <li>Click <strong>Trace Origin</strong> to lock the 3D tactical radar dome onto the source coordinates and visualize the live attack vector to <strong>Bengaluru HQ</strong>.</li>
+    </ol>
+    <div class="demo">
+      <div class="row">
+        <input id="ip" value="185.220.101.5" aria-label="IP address" placeholder="e.g. 185.220.101.5">
+        <button type="button" class="btn" id="btnTrace">⌖ Trace Origin</button>
+      </div>
+      <div class="chips">
+        <button type="button" data-ip="185.220.101.5">185.220.101.5 (Tor Node)</button>
+        <button type="button" data-ip="45.33.32.156">45.33.32.156 (Scanner)</button>
+        <button type="button" data-ip="91.210.107.14">91.210.107.14 (Botnet)</button>
+        <button type="button" data-ip="8.8.8.8">8.8.8.8 (Google DNS)</button>
+      </div>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="con" id="c1">
+        <p class="d">[RADAR_READY] Tactical telemetry online. Select or enter a target IPv4 address to trace its vector.</p>
+      </div>
+      <div class="hint3d">
+        <span>ACTIVE MODULE: 02 // THREAT GEO-RADAR</span>
+        <span>MODEL: OVERWATCH-GEO</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAB 3: CRYPTO GYRO-VAULT -->
+  <section class="tp" id="p2">
+    <h2>Cryptographic Gyro-Vault (SHA-256)</h2>
+    <h3>Architecture</h3>
+    <p>Cryptographic hashing converts arbitrary plaintext into a fixed 256-bit (64 hex character) digest. Modifying even a single character triggers the <strong>Avalanche Effect</strong>, flipping ~50% of all output bits and making reverse-engineering mathematically infeasible.</p>
+    <h3>Interactive Controls</h3>
+    <ol>
+      <li>Type or edit any string in the input box below.</li>
+      <li>Watch the <strong>Quantum Gyro-Vault</strong> spin up its mechanical locking gears and pulse its diamond core as it computes the live SHA-256 digest.</li>
+    </ol>
+    <div class="demo">
+      <div class="row">
+        <input id="tx" value="KartikSecOps#2026" aria-label="Text to hash" placeholder="Type secret payload...">
+        <button type="button" class="btn" id="btnHash">⚡ Compute SHA-256</button>
+      </div>
+      <div class="con" id="c2" style="height:160px">
+        <p class="d">[VAULT_READY] Waiting for input stream...</p>
+      </div>
+      <div class="hint3d">
+        <span>ACTIVE MODULE: 03 // CRYPTO GYRO-VAULT</span>
+        <span>MODEL: QUANTUM-SAFE 256</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)},LAB={tab:0,mode:'i',a:0,b:0};
+
+function log(id,h){
+  var c=$(id),p=document.createElement('p');
+  p.innerHTML=h;c.appendChild(p);
+  while(c.children.length>60)c.removeChild(c.firstChild);
+  c.scrollTop=c.scrollHeight;
+}
+
+function switchTab(i){
+  LAB.tab=i;
+  ['t0','t1','t2'].forEach(function(id,k){$(id).classList.toggle('on',k===i)});
+  ['p0','p1','p2'].forEach(function(id,k){$(id).classList.toggle('on',k===i)});
+}
+
+$('t0').addEventListener('click',function(){switchTab(0)});
+$('t1').addEventListener('click',function(){switchTab(1)});
+$('t2').addEventListener('click',function(){switchTab(2)});
+
+/* ---------- LAB 1: FIREWALL LOGIC ---------- */
+var fwT;
+function fw(m){
+  LAB.mode=m;
+  clearTimeout(fwT);
+  $('sSt').textContent=m==='a'?'UNDER ATTACK':'STREAMING';
+  $('sSt').style.color=m==='a'?'#ff5c77':'#33ff99';
+  log('c0',m==='a'?'<span class="al">[ALERT] High-velocity SYN-Flood detected! Engaging Aegis shield &amp; dropping malformed packets...</span>':'<span class="ok">[INFO] Verified TLS 1.3 handshake. Streaming HTTPS packets on port 443.</span>');
+  fwT=setTimeout(function(){
+    LAB.mode='i';
+    $('sSt').textContent='MONITORING';
+    $('sSt').style.color='#fff';
+    log('c0','<span class="d">[SYS] Traffic burst completed. Perimeter nominal.</span>');
+  },m==='a'?7500:5500);
+}
+
+function fwReset(){
+  clearTimeout(fwT);
+  LAB.a=0;LAB.b=0;LAB.mode='i';
+  $('sA').textContent='0';$('sB').textContent='0';
+  $('sSt').textContent='IDLE';$('sSt').style.color='#fff';
+  $('c0').innerHTML='<p class="d">[SYS_RESET] Firewall packet counters and telemetry logs cleared.</p>';
+}
+
+$('btnNorm').addEventListener('click',function(){fw('n')});
+$('btnAtk').addEventListener('click',function(){fw('a')});
+$('btnRst').addEventListener('click',fwReset);
+
+var rip=function(){return [1,2,3,4].map(function(){return Math.random()*223+1|0}).join('.')};
+LAB.pk=function(bad){
+  var R=['SYN_FLOOD_DROP','PORT_23_TELNET_BLOCK','MALFORMED_PAYLOAD_SIG','RATE_LIMIT_EXCEEDED'];
+  log('c0',bad?'<span class="al">[DROP]</span> '+rip()+' → '+R[Math.random()*4|0]:'<span class="ok">[ALLOW]</span> '+rip()+' → tcp/443 TLS_OK');
+};
+
+/* ---------- LAB 2: THREAT GEO LOGIC ---------- */
+var GEO=[
+  ['185.',50.11,8.68,'Frankfurt, DE','Tor Exit Relay (Anonymous)',94],
+  ['45.',40.71,-74.0,'New York, US','Bulletproof Cloud ASN',78],
+  ['103.',1.35,103.82,'Singapore, SG','Compromised VPS Node',62],
+  ['91.',55.75,37.62,'Moscow, RU','Mirai Botnet C2 Server',89],
+  ['8.8.',37.39,-122.08,'Mountain View, US','Google Public DNS',4],
+  ['41.',-1.29,36.82,'Nairobi, KE','Dynamic Telecom Pool',45],
+  ['177.',-23.55,-46.63,'Sao Paulo, BR','Proxy Botnet Node',68],
+  ['1.',35.68,139.69,'Tokyo, JP','Cloud Data Center',34]
+];
+
+function trace(){
+  var ip=$('ip').value.trim();
+  if(!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)||ip.split('.').some(function(n){return n>255})){
+    log('c1','<span class="al">[ERROR]</span> Invalid IPv4 format: "'+ip+'". Try 185.220.101.5');
+    return;
+  }
+  var g=GEO.filter(function(e){return ip.indexOf(e[0])===0})[0]||GEO[ip.split('.').reduce(function(s,n){return s+ +n},0)%GEO.length];
+  log('c1','[SAT_LOCK] Querying BGP, WHOIS &amp; Threat Feeds for <strong>'+ip+'</strong>...');
+  setTimeout(function(){
+    log('c1','<span class="w">[TELEMETRY]</span> Origin: '+g[3]+' | Classification: '+g[4]+' | Threat Score: <strong>'+g[5]+'/100</strong>');
+    log('c1',g[5]>70?'<span class="al">[VERDICT] CRITICAL THREAT — Auto-pushing BGP blackhole &amp; firewall DROP rule.</span>':g[5]>40?'<span class="w">[VERDICT] ELEVATED RISK — Enforcing strict rate-limiting &amp; deep packet inspection.</span>':'<span class="ok">[VERDICT] CLEAN TRAFFIC — Verified benign infrastructure.</span>');
+    $('meter').style.width=g[5]+'%';
+    if(LAB.trace)LAB.trace(g[1],g[2],g[5]);
+  },200);
+}
+
+$('btnTrace').addEventListener('click',trace);
+document.querySelectorAll('.chips button').forEach(function(b){
+  b.addEventListener('click',function(){
+    $('ip').value=b.getAttribute('data-ip');
+    trace();
+  });
+});
+
+/* ---------- LAB 3: CRYPTO VAULT LOGIC ---------- */
+var prev='';
+function fallbackHash(str){
+  var h='';
+  for(var i=0;i<64;i++){
+    var v=0;
+    for(var j=0;j<str.length;j++)v=(v*31+str.charCodeAt(j)+(i*17))&0xff;
+    h+=((v^(i*13))&0x0f).toString(16);
+  }
+  return h;
+}
+async function hash(){
+  var v=$('tx').value,c=$('c2'),h='';
+  try{
+    if(window.crypto&&crypto.subtle){
+      var d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
+      h=[].map.call(new Uint8Array(d),function(x){return x.toString(16).padStart(2,'0')}).join('');
+    }else{h=fallbackHash(v)}
+  }catch(e){h=fallbackHash(v)}
+  var out='',bits=0;
+  for(var i=0;i<64;i++){
+    var ch=prev&&prev[i]!==h[i];
+    if(ch)bits+=(parseInt(prev[i],16)^parseInt(h[i],16)).toString(2).replace(/0/g,'').length;
+    out+=ch?'<b style="color:#33ff99">'+h[i]+'</b>':'<span style="color:#9a9aa8">'+h[i]+'</span>';
+  }
+  c.innerHTML='<p class="d">Plaintext ('+v.length+' bytes): "'+v.replace(/</g,'&lt;')+'"</p><p>SHA-256 Digest (256-bit / 64 Hex):</p><p style="font-size:13px;letter-spacing:.5px;margin:6px 0">'+out+'</p>'+(prev?'<p class="ok">⚡ Avalanche Effect: '+bits+' of 256 bits flipped ('+Math.round(bits/2.56)+'% mutation)</p>':'<p class="d">Modify even 1 character above to trigger the Avalanche Effect.</p>');
+  prev=h;
+  if(LAB.pulse)LAB.pulse();
+}
+$('btnHash').addEventListener('click',hash);
+$('tx').addEventListener('input',hash);
+$('ip').addEventListener('keydown',function(e){if(e.key==='Enter')trace()});
+$('tx').addEventListener('keydown',function(e){if(e.key==='Enter')hash()});
+
+/* ---------- ORIGINAL GLOWING CURSOR ---------- */
+(function(){
+  var c=$('cur'),h=$('halo'),x=-200,y=-200,hx=-200,hy=-200;
+  window.addEventListener('mousemove',function(e){
+    x=e.clientX;
+    y=e.clientY;
+    c.style.left=x+'px';
+    c.style.top=y+'px';
+  },{passive:true});
+  window.addEventListener('mouseover',function(e){
+    document.body.classList.toggle('hv',!!e.target.closest('a,button,input'));
+  },{passive:true});
+  (function f(){
+    hx+=(x-hx)*.16;
+    hy+=(y-hy)*.16;
+    h.style.left=hx+'px';
+    h.style.top=hy+'px';
+    requestAnimationFrame(f);
+  })();
+})();
+
+/* ---------- 3D ENGINE ---------- */
+(function(){
+var T=THREE,cv=$('gl'),r;
+try{r=new T.WebGLRenderer({canvas:cv,antialias:true})}catch(e){return}
+r.setPixelRatio(Math.min(devicePixelRatio,2));
+r.setClearColor(0x070709);
+
+var s=new T.Scene();
+s.fog=new T.FogExp2(0x070709,.022);
+var cam=new T.PerspectiveCamera(45,1,.1,300);
+cam.position.set(0,1.4,17); // Zoomed out slightly
+
+s.add(new T.AmbientLight(0xffffff,.65));
+var dl=new T.DirectionalLight(0xffffff,1.35);dl.position.set(7,12,10);s.add(dl);
+var rim=new T.PointLight(0x33ccff,1.5,60);rim.position.set(-8,4,-6);s.add(rim);
+
+function M(c,o){return new T.MeshStandardMaterial({color:c,roughness:.28,metalness:.72,transparent:!!o,opacity:o||1})}
+function bx(g,w,h,d,x,y,z,c,edgeCol){
+  var m=new T.Mesh(new T.BoxGeometry(w,h,d),M(c||0xc9ccd4));
+  m.position.set(x,y,z);
+  m.add(new T.LineSegments(new T.EdgesGeometry(m.geometry),new T.LineBasicMaterial({color:edgeCol||0xffffff,transparent:true,opacity:.6})));
+  g.add(m);return m;
+}
+var WF=function(o,c){return new T.MeshBasicMaterial({color:c||0xffffff,wireframe:true,transparent:true,opacity:o})};
+
+/* MODEL 1: FIREWALL GATE */
+function firewall(){
+  var o=new T.Group(),g=new T.Group(),P=[];
+  var outerRing=new T.Mesh(new T.TorusGeometry(2.5,.12,12,8),M(0x1b1b26));
+  outerRing.add(new T.LineSegments(new T.EdgesGeometry(outerRing.geometry),new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.65})));
+  g.add(outerRing);
+
+  [[-2.55,1.15],[2.55,1.15],[-2.55,-1.15],[2.55,-1.15]].forEach(function(p){
+    var pil=bx(g,.72,1.5,.85,p[0],p[1],0,0x14141d,0x33ccff);
+    bx(pil,.78,.14,.9,0,.38,0,0xffffff);
+    bx(pil,.78,.14,.9,0,-.38,0,0xffffff);
+  });
+
+  var shieldGrp=new T.Group();
+  var hexCore=new T.Mesh(new T.CircleGeometry(2.05,6),new T.MeshBasicMaterial({color:0x33ccff,transparent:true,opacity:.14,side:T.DoubleSide}));
+  shieldGrp.add(hexCore);
+  var hexWire=new T.Mesh(new T.RingGeometry(.4,2.05,6,3),new T.MeshBasicMaterial({color:0x33ff99,wireframe:true,transparent:true,opacity:.55,side:T.DoubleSide}));
+  shieldGrp.add(hexWire);
+  var innerRing=new T.Mesh(new T.RingGeometry(1.1,1.24,6),new T.MeshBasicMaterial({color:0xffffff,side:T.DoubleSide,transparent:true,opacity:.85}));
+  shieldGrp.add(innerRing);
+  g.add(shieldGrp);
+
+  var scanH=new T.Mesh(new T.BoxGeometry(4.5,.05,.4),new T.MeshBasicMaterial({color:0x33ff99,transparent:true,opacity:.8}));
+  g.add(scanH);
+  var scanV=new T.Mesh(new T.BoxGeometry(.05,4.5,.4),new T.MeshBasicMaterial({color:0x33ccff,transparent:true,opacity:.6}));
+  g.add(scanV);
+
+  for(var i=0;i<6;i++){
+    var a=i/6*Math.PI*2;
+    var rail=new T.Mesh(new T.BoxGeometry(.04,.04,12),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.22}));
+    rail.position.set(Math.cos(a)*2.05,Math.sin(a)*2.05,0);
+    g.add(rail);
+  }
+
+  var shock=new T.Mesh(new T.RingGeometry(.15,.45,6),new T.MeshBasicMaterial({color:0xff3b5c,side:T.DoubleSide,transparent:true,opacity:0}));
+  shock.position.z=-.25;g.add(shock);
+  var shProg=0;
+
+  var goodGeo=new T.BoxGeometry(.24,.24,.42);
+  var badGeo=new T.OctahedronGeometry(.3,0);
+  var goodMat=new T.MeshBasicMaterial({color:0x33ff99});
+  var badMat=new T.MeshBasicMaterial({color:0xff3b5c,wireframe:true});
+
+  for(var k=0;k<46;k++){
+    var m=new T.Mesh(goodGeo,goodMat);
+    m.visible=false;g.add(m);
+    P.push({m:m,on:false,bad:false,st:0,vz:0,vx:0,vy:0,cnt:false});
+  }
+
+  o.add(g);o.base=-.42;
+  o.anim=function(t){
+    var md=LAB.mode,sp=md==='a'?.25:md==='n'?.12:.035,pb=md==='a'?.9:md==='n'?.06:.25;
+    var col=md==='a'?0xff3b5c:md==='n'?0x33ff99:0x33ccff;
+
+    hexWire.rotation.z=t*.0012;
+    innerRing.rotation.z=-t*.0022;
+    hexWire.material.color.setHex(col);
+    hexCore.material.color.setHex(col);
+
+    scanH.position.y=Math.sin(t*.0038)*1.8;
+    scanV.position.x=Math.cos(t*.003)*1.8;
+    scanH.material.color.setHex(col);
+
+    if(shProg>0){
+      shProg-=.045;
+      shock.scale.setScalar(1+(1-shProg)*3.8);
+      shock.material.opacity=Math.max(0,shProg);
+    }
+
+    P.forEach(function(p){
+      if(!p.on){
+        if(Math.random()<sp){
+          p.on=true;p.bad=Math.random()<pb;p.st=0;p.cnt=false;
+          p.vz=.12+Math.random()*.07;p.vx=0;p.vy=0;
+          var rad=Math.random()*1.6,ang=Math.random()*6.283;
+          p.m.geometry=p.bad?badGeo:goodGeo;
+          p.m.material=p.bad?badMat:goodMat;
+          p.m.position.set(Math.cos(ang)*rad,Math.sin(ang)*rad,-6.5);
+          p.m.scale.setScalar(1);
+          p.m.visible=true;
+        }
+        return;
+      }
+      var q=p.m.position;
+      q.z+=p.vz;q.x+=p.vx;q.y+=p.vy;
+      if(p.bad){p.m.rotation.x+=.09;p.m.rotation.y+=.09}
+
+      if(p.bad&&p.st===0&&q.z>-.3){
+        p.st=1;p.vz=-.19-Math.random()*.08;
+        p.vx=(q.x>=0?1:-1)*.06;p.vy=(q.y>=0?1:-1)*.06;
+        p.m.scale.setScalar(1.6);
+        shock.position.set(q.x,q.y,-.2);shProg=1;
+        LAB.b++;$('sB').textContent=LAB.b;
+        if(LAB.b%6===1)LAB.pk(true);
+      }
+      if(!p.bad&&!p.cnt&&q.z>0){
+        p.cnt=true;LAB.a++;$('sA').textContent=LAB.a;
+        if(LAB.a%7===1)LAB.pk(false);
+      }
+      if(q.z>6.5||q.z<-7){p.on=false;p.m.visible=false}
+    });
+  };
+  return o;
+}
+
+/* MODEL 2: THREAT GEO-RADAR */
+function ll(lat,lon,R){
+  var f=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;
+  return new T.Vector3(-R*Math.sin(f)*Math.cos(t),R*Math.cos(f),R*Math.sin(f)*Math.sin(t));
+}
+function globe(){
+  var o=new T.Group(),g=new T.Group(),R=2.1;
+
+  var radarBase=new T.Group();
+  radarBase.position.y=-1.9;
+  var rDisk=new T.Mesh(new T.RingGeometry(1.3,3.0,48),new T.MeshBasicMaterial({color:0x33ccff,side:T.DoubleSide,transparent:true,opacity:.15,wireframe:true}));
+  rDisk.rotation.x=Math.PI/2;radarBase.add(rDisk);
+  var sweep=new T.Mesh(new T.CircleGeometry(2.95,24,0,.55),new T.MeshBasicMaterial({color:0x33ff99,side:T.DoubleSide,transparent:true,opacity:.28}));
+  sweep.rotation.x=Math.PI/2;sweep.position.y=.02;radarBase.add(sweep);
+  o.add(radarBase);
+
+  g.add(new T.Mesh(new T.SphereGeometry(R-.05,32,24),M(0x080a12,.92)));
+  g.add(new T.Mesh(new T.IcosahedronGeometry(R*1.02,2),WF(.22,0x33ccff)));
+
+  var pts=[];
+  for(var i=0;i<850;i++){
+    var y=1-i/424.5,rr=Math.sqrt(Math.max(0,1-y*y)),a=i*2.39996;
+    pts.push(Math.cos(a)*rr*R*1.01,y*R*1.01,Math.sin(a)*rr*R*1.01);
+  }
+  var pg=new T.BufferGeometry();pg.setAttribute('position',new T.Float32BufferAttribute(pts,3));
+  g.add(new T.Points(pg,new T.PointsMaterial({color:0xffffff,size:.048,transparent:true,opacity:.88})));
+
+  var gim1=new T.Mesh(new T.TorusGeometry(R*1.22,.02,8,90),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.45}));
+  gim1.rotation.x=Math.PI/2;g.add(gim1);
+  var gim2=new T.Mesh(new T.TorusGeometry(R*1.32,.018,8,90),new T.MeshBasicMaterial({color:0x33ccff,transparent:true,opacity:.35}));
+  gim2.rotation.y=.6;gim2.rotation.x=.4;g.add(gim2);
+
+  var sat1=bx(gim2,.24,.14,.14,R*1.32,0,0,0xffffff,0x33ccff);
+  bx(sat1,.04,.55,.2,0,0,0,0x33ccff);
+
+  var home=ll(12.97,77.59,R);
+  var hm=new T.Mesh(new T.CylinderGeometry(.02,.12,.35,8),new T.MeshBasicMaterial({color:0x33ff99}));
+  hm.position.copy(home.clone().multiplyScalar(1.06));
+  hm.lookAt(0,0,0);hm.rotateX(Math.PI/2);g.add(hm);
+
+  var arc=null,curve=null,dot=null,tm=null,tr=null,prog=0;
+  LAB.trace=function(lat,lon,score){
+    [arc,dot,tm,tr].forEach(function(x){if(x)g.remove(x)});
+    var tp=ll(lat,lon,R),col=score>70?0xff3b5c:score>40?0xffcc00:0x33ff99;
+    var mid=tp.clone().add(home).multiplyScalar(.5).normalize().multiplyScalar(R*2.25);
+    curve=new T.QuadraticBezierCurve3(tp,mid,home);
+    arc=new T.Line(new T.BufferGeometry().setFromPoints(curve.getPoints(64)),new T.LineBasicMaterial({color:col}));
+    arc.geometry.setDrawRange(0,0);g.add(arc);
+
+    dot=new T.Mesh(new T.OctahedronGeometry(.11),new T.MeshBasicMaterial({color:0xffffff}));
+    g.add(dot);
+
+    tm=new T.Mesh(new T.ConeGeometry(.16,.45,4),new T.MeshBasicMaterial({color:col,wireframe:true}));
+    tm.position.copy(tp.clone().multiplyScalar(1.1));
+    tm.lookAt(0,0,0);tm.rotateX(-Math.PI/2);g.add(tm);
+
+    tr=new T.Mesh(new T.RingGeometry(.2,.28,6),new T.MeshBasicMaterial({color:col,transparent:true,side:T.DoubleSide}));
+    tr.position.copy(tp.clone().multiplyScalar(1.02));
+    tr.lookAt(tp.clone().multiplyScalar(2));g.add(tr);
+    prog=0;
+  };
+
+  setTimeout(function(){if(LAB.trace)LAB.trace(50.11,8.68,94)},350);
+
+  o.add(g);o.spin=true;
+  o.anim=function(t){
+    sweep.rotation.z=-t*.0025;
+    gim2.rotation.z=t*.0015;
+    if(arc){
+      prog=Math.min(1,prog+.016);
+      arc.geometry.setDrawRange(0,Math.floor(prog*65));
+      dot.position.copy(curve.getPoint((t*.0009)%1));
+      var k=(t*.0024)%1;
+      tr.scale.setScalar(1+k*2.5);
+      tr.material.opacity=1-k;
+      tm.rotation.z=t*.005;
+    }
+  };
+  return o;
+}
+
+/* MODEL 3: CRYPTO GYRO-VAULT */
+function charTex(ch,col){
+  var c=document.createElement('canvas');c.width=c.height=64;
+  var x=c.getContext('2d');
+  x.font='bold 42px "JetBrains Mono",monospace';
+  x.textAlign='center';x.textBaseline='middle';
+  x.fillStyle=col||'#fff';x.fillText(ch,32,32);
+  return new T.CanvasTexture(c);
+}
+function vault(){
+  var o=new T.Group(),g=new T.Group(),bits=[],fl=0;
+
+  var gear=new T.Group();
+  var mainWheel=new T.Mesh(new T.TorusGeometry(2.35,.14,16,64),M(0x1f1f2b));
+  mainWheel.add(new T.LineSegments(new T.EdgesGeometry(mainWheel.geometry),new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.5})));
+  gear.add(mainWheel);
+  for(var i=0;i<12;i++){
+    var a=i/12*Math.PI*2;
+    var tooth=bx(gear,.32,.32,.3,Math.cos(a)*2.35,Math.sin(a)*2.35,0,0xe4e6ef,0x33ccff);
+    tooth.rotation.z=a;
+  }
+  g.add(gear);
+
+  var tum1=new T.Mesh(new T.CylinderGeometry(1.85,1.85,.3,24,1,true),new T.MeshBasicMaterial({color:0x33ccff,wireframe:true,transparent:true,opacity:.45}));
+  tum1.rotation.x=Math.PI/2;g.add(tum1);
+
+  var tum2=new T.Mesh(new T.TorusGeometry(1.45,.05,12,48),M(0xd4d8e2));
+  tum2.rotation.y=Math.PI/3;g.add(tum2);
+
+  var crystal=new T.Mesh(new T.OctahedronGeometry(.92,0),M(0x12121a));
+  var crysEdges=new T.LineSegments(new T.EdgesGeometry(crystal.geometry),new T.LineBasicMaterial({color:0x33ff99,transparent:true,opacity:.95}));
+  crystal.add(crysEdges);
+  var innerGlow=new T.Mesh(new T.OctahedronGeometry(.6,1),new T.MeshBasicMaterial({color:0x33ff99,wireframe:true,transparent:true,opacity:.5}));
+  crystal.add(innerGlow);
+  g.add(crystal);
+
+  [[-1.65,1.65],[1.65,1.65],[-1.65,-1.65],[1.65,-1.65]].forEach(function(p){
+    var beam=new T.Mesh(new T.CylinderGeometry(.02,.02,2.3,8),new T.MeshBasicMaterial({color:0x33ff99,transparent:true,opacity:.45}));
+    beam.position.set(p[0]*.5,p[1]*.5,0);
+    beam.rotation.z=Math.atan2(p[1],p[0])+Math.PI/2;
+    g.add(beam);
+  });
+
+  var glyphs=['0','1','F','A','9','E','C','7'].map(function(c,i){return charTex(c,i%2===0?'#33ff99':'#33ccff')});
+  for(var j=0;j<18;j++){
+    var b=new T.Mesh(new T.PlaneGeometry(.4,.4),new T.MeshBasicMaterial({map:glyphs[j%glyphs.length],transparent:true,side:T.DoubleSide}));
+    b.userData={a:j/18*6.283,y:(Math.random()-.5)*2.3,r:2.65+Math.random()*.4};
+    g.add(b);bits.push(b);
+  }
+
+  LAB.pulse=function(){fl=1};
+  o.add(g);o.spin=true;
+  o.anim=function(t){
+    fl*=.92;
+    var s=1+fl*.45;
+    crystal.scale.setScalar(s);
+    crystal.rotation.y=t*.0018+fl*.35;
+    crystal.rotation.x=t*.001;
+    crysEdges.material.color.setHex(fl>.15?0xffffff:0x33ff99);
+
+    gear.rotation.z=t*.0005-fl*.15;
+    tum1.rotation.y=-t*.0014+fl+.25;
+    tum2.rotation.x=t*.0016+fl*.2;
+    tum2.rotation.y=t*.001;
+
+    bits.forEach(function(b){
+      var u=b.userData;
+      u.a+=.012+fl*.08;
+      b.position.set(Math.cos(u.a)*u.r,u.y*.6+Math.sin(u.a*3)*.25,Math.sin(u.a)*u.r);
+      b.rotation.y+=.03;
+    });
+  };
+  return o;
+}
+
+var models=[firewall(),globe(),vault()],stage=new T.Group();
+s.add(stage);
+models.forEach(function(m){m.visible=false;stage.add(m)});
+
+var ped=new T.Mesh(new T.CylinderGeometry(3.4,3.7,.14,64),M(0x15151d));
+ped.position.y=-2.65;
+ped.add(new T.LineSegments(new T.EdgesGeometry(ped.geometry),new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.4})));
+stage.add(ped);
+
+var ring=new T.Mesh(new T.TorusGeometry(4.0,.022,8,100),new T.MeshBasicMaterial({color:0xffffff}));
+ring.rotation.x=Math.PI/2;ring.position.y=-2.56;stage.add(ring);
+
+var pulse=new T.Mesh(new T.TorusGeometry(3.4,.035,8,100),new T.MeshBasicMaterial({color:0x33ccff,transparent:true,opacity:0}));
+pulse.rotation.x=Math.PI/2;pulse.position.y=-2.54;stage.add(pulse);
+
+var orbit=new T.Group();stage.add(orbit);
+for(var i=0;i<18;i++){
+  var o=new T.Mesh(new T.OctahedronGeometry(.085),new T.MeshBasicMaterial({color:0xffffff}));
+  o.userData={a:i/18*6.283,y:(Math.random()-.5)*3.8,s:.4+Math.random()*.6};
+  orbit.add(o);
+}
+
+var bg=new T.Group();s.add(bg);var rings=[],polys=[];
+for(var i=0;i<16;i++){
+  var q=new T.Mesh(new T.TorusGeometry(9+(i%3)*2,.03,6,60),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.2}));
+  q.position.z=-i*7-6;bg.add(q);rings.push(q);
+}
+for(var i=0;i<14;i++){
+  var gm=i%2?new T.IcosahedronGeometry(.8+Math.random()*.8):new T.OctahedronGeometry(.8+Math.random()*.8),
+      p=new T.Mesh(gm,new T.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:.25}));
+  var a=Math.random()*6.283,rad=10+Math.random()*8;
+  p.position.set(Math.cos(a)*rad,Math.sin(a)*rad*.6,-Math.random()*110);
+  p.userData={x:Math.random()*.01,y:Math.random()*.01};
+  bg.add(p);polys.push(p);
+}
+var DN=900,da=new Float32Array(DN*3);
+for(var i=0;i<DN;i++){da[i*3]=(Math.random()-.5)*70;da[i*3+1]=(Math.random()-.5)*40;da[i*3+2]=-Math.random()*130+20}
+var dg=new T.BufferGeometry();dg.setAttribute('position',new T.BufferAttribute(da,3));
+bg.add(new T.Points(dg,new T.PointsMaterial({color:0xffffff,size:.08,transparent:true,opacity:.5})));
+var grid=new T.GridHelper(200,100,0x444444,0x1a1a1a);grid.position.y=-7;bg.add(grid);
+
+var cur=-1,tin=0,mx=0,my=0,pls=0,mRot=0,dgy=0,dgx=0,down=false,lx=0,ly=0;
+
+window.addEventListener('pointermove',function(e){
+  mx=e.clientX/innerWidth-.5;
+  my=e.clientY/innerHeight-.5;
+  if(down){
+    dgy+=(e.clientX-lx)*.012;
+    dgx=Math.max(-.7,Math.min(.7,dgx+(e.clientY-ly)*.008));
+    lx=e.clientX;ly=e.clientY;
+  }
+},{passive:true});
+
+window.addEventListener('pointerdown',function(e){
+  if(!e.target.closest('.tp,.tabs,nav,button,input,a')){
+    down=true;lx=e.clientX;ly=e.clientY;
+  }
+});
+window.addEventListener('pointerup',function(){down=false});
+
+function rs(){
+  r.setSize(innerWidth,innerHeight);
+  cam.aspect=innerWidth/innerHeight;
+  cam.updateProjectionMatrix();
+}
+window.addEventListener('resize',rs);rs();
+
+function loop(t){
+  requestAnimationFrame(loop);
+  var mob=innerWidth<860;
+  if(LAB.tab!==cur){
+    models.forEach(function(m,j){m.visible=j===LAB.tab});
+    cur=LAB.tab;tin=.5;mRot=0;pls=1;
+  }
+  tin+=(1-tin)*.09;
+  var m=models[cur],k=mob?.58:.78;
+  m.scale.setScalar(.001+tin*k);
+  mRot+=.0055+(1-tin)*.18;
+  m.rotation.y=(m.spin?mRot:(m.base||0)+Math.sin(t*.0006)*.28)+mx*.45+dgy;
+  m.rotation.x=my*.22+dgx;
+  m.position.y=Math.sin(t*.0012)*.15;
+  m.anim(t);
+
+  rings.forEach(function(q,i){q.rotation.z=t*.0003*(i%2?1:-1)+i});
+  polys.forEach(function(q){q.rotation.x+=q.userData.x;q.rotation.y+=q.userData.y});
+
+  /* 3D Stage shifted further Right and slightly Down */
+  var tx=mob?0:5.4; 
+  stage.position.set(tx,mob?2.2:-0.8,0);
+  ring.rotation.z=t*.0005;
+
+  orbit.children.forEach(function(o){
+    var u=o.userData;u.a+=.01*u.s;
+    o.position.set(Math.cos(u.a)*4.2,u.y+Math.sin(t*.001+u.a)*.3,Math.sin(u.a)*4.2);
+    o.rotation.x=t*.003;
+  });
+
+  if(pls>0){
+    pls-=.025;
+    pulse.scale.setScalar(1+(1-pls)*1.6);
+    pulse.material.opacity=Math.max(0,pls);
+  }else pulse.material.opacity=0;
+
+  cam.position.x+=(mx*1.6-cam.position.x)*.05;
+  cam.position.y+=(1.4-my*1.2-cam.position.y)*.05;
+  cam.position.z=17; 
+  cam.lookAt(0,0,0);
+  r.render(s,cam);
+}
+requestAnimationFrame(loop);
+})();
+hash();
+</script>
+</body>
+</html>

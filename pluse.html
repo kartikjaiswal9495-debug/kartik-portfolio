@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pulse Emergency | One shake. Help is on the way.</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070709;--ink:#f5f5f7;--mut:#c9c9d2;--line:rgba(255,255,255,.2);color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.65 Sora,system-ui,sans-serif;overflow-x:hidden}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#bar{position:fixed;top:0;left:0;height:3px;width:100%;background:#fff;transform-origin:0 50%;transform:scaleX(0);z-index:9}
+nav{position:fixed;top:0;left:0;right:0;z-index:5;padding:18px 6vw;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(var(--bg),transparent)}
+nav b{letter-spacing:.2em;font-size:13px}nav span{font-size:12px;color:var(--mut);letter-spacing:.1em}
+section{position:relative;z-index:1;min-height:100vh;padding:100px 6vw 60px;display:flex;align-items:center;max-width:1240px;margin:auto}
+section.l{justify-content:flex-start}section.r{justify-content:flex-end}
+.p{max-width:480px;min-width:0;width:100%;overflow:hidden;background:rgba(9,9,12,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:22px;padding:30px;opacity:0;transform:translateY(40px);transition:all .9s cubic-bezier(.2,.8,.2,1)}
+.p.in{opacity:1;transform:none}
+.n{font-size:11px;letter-spacing:.2em;color:#9a9aa6;text-transform:uppercase;margin-bottom:10px;display:block}
+h1{font-size:clamp(32px,5vw,56px);line-height:1.05;font-weight:800;letter-spacing:-2px;margin-bottom:16px;overflow-wrap:anywhere;max-width:100%}
+h1 span{display:block;-webkit-text-stroke:1.5px #fff;color:transparent;overflow-wrap:anywhere}
+h2{overflow-wrap:anywhere;font-size:clamp(24px,3.4vw,38px);line-height:1.1;font-weight:800;letter-spacing:-1px;margin-bottom:12px}
+p{color:var(--mut);font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chips i{font-style:normal;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:5px 14px;color:#fff}
+.hint{margin-top:22px;font-size:12px;letter-spacing:.2em;color:#9a9aa6;animation:bl 1.6s infinite}@keyframes bl{50%{opacity:.3}}
+footer{position:relative;z-index:1;text-align:center;padding:30px;font-size:12px;color:var(--mut);border-top:1px solid var(--line);background:rgba(7,7,10,.85)}
+@media(max-width:860px){section{align-items:flex-end;padding-bottom:40px}section.l,section.r{justify-content:center}.p{padding:22px}}
+@media(prefers-reduced-motion:reduce){.p{opacity:1;transform:none}}
+
+.p>*{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
+.p.in>*{opacity:1;transform:none}
+.p.in>*:nth-child(1){transition-delay:.15s}.p.in>*:nth-child(2){transition-delay:.28s}.p.in>*:nth-child(3){transition-delay:.4s}.p.in>*:nth-child(4){transition-delay:.52s}.p.in>*:nth-child(5){transition-delay:.64s}.p.in>*:nth-child(6){transition-delay:.76s}
+.chips i{opacity:0;transform:scale(.85);transition:all .5s cubic-bezier(.2,.8,.2,1)}
+.p.in .chips i{opacity:1;transform:none}
+.p.in .chips i:nth-child(1){transition-delay:.8s}.p.in .chips i:nth-child(2){transition-delay:.92s}.p.in .chips i:nth-child(3){transition-delay:1.04s}
+.d{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:9px}
+.d li{position:relative;padding-left:24px;font-size:13.5px;color:var(--mut);line-height:1.5;opacity:0;transform:translateX(-12px);transition:all .6s cubic-bezier(.2,.8,.2,1)}
+.d li:before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12)}
+.p.in .d li{opacity:1;transform:none}
+.p.in .d li:nth-child(1){transition-delay:.5s}.p.in .d li:nth-child(2){transition-delay:.65s}.p.in .d li:nth-child(3){transition-delay:.8s}
+.hint{animation:bl 1.6s infinite,bn 1.6s infinite}@keyframes bn{50%{transform:translateY(6px)}}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;font:600 14px Sora,system-ui,sans-serif;text-decoration:none;border:1px solid #fff;color:#fff;transition:transform .25s,background .25s}
+.btn.fill{background:#fff;color:#000;animation:gl 2.2s infinite}
+@keyframes gl{0%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}70%,100%{box-shadow:0 0 0 16px rgba(255,255,255,0)}}
+.btn:hover{transform:translateY(-3px) scale(1.04)}
+.num{margin-top:14px;font-size:13px;letter-spacing:.08em;color:#fff}
+#dots{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;gap:10px}
+#dots button{width:8px;height:8px;padding:0;border:0;border-radius:99px;background:rgba(255,255,255,.3);cursor:pointer;transition:all .35s}
+#dots button.on{background:#fff;height:24px}
+@media(prefers-reduced-motion:reduce){.p>*,.chips i,.d li{opacity:1;transform:none}}
+
+#intro{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;animation:iv .9s ease 2.1s forwards}
+@keyframes iv{to{opacity:0;visibility:hidden;transform:scale(1.12)}}
+#intro path{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;stroke-dashoffset:420;animation:dr 1.5s ease .2s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+#intro b{letter-spacing:.5em;margin-right:-.5em;font-size:22px;opacity:0;animation:fi .8s ease .9s forwards}
+#intro small{letter-spacing:.35em;margin-right:-.35em;font-size:11px;color:var(--mut);opacity:0;animation:fi .8s ease 1.2s forwards}
+@keyframes fi{to{opacity:1}}
+nav{animation:nv 1s ease 2.4s both}@keyframes nv{from{opacity:0;transform:translateY(-14px)}}
+@media(prefers-reduced-motion:reduce){#intro{display:none}}
+</style>
+</head>
+<body>
+<div id="intro"><svg viewBox="0 0 300 80" width="260" aria-hidden="true"><path d="M0 40 H90 L105 40 L118 12 L136 68 L150 28 L160 40 H300"/></svg><b>PULSE</b><small>EMERGENCY</small></div>
+<div id="bar"></div><canvas id="gl"></canvas>
+
+<!-- --- UPDATED NAVIGATION WITH BACK TO PORTFOLIO BUTTON --- -->
+<nav>
+  <div style="display:flex; align-items:baseline; gap:12px;">
+    <b>PULSE</b><span>EMERGENCY APP</span>
+  </div>
+  <a href="index.html" class="btn" style="padding:8px 16px; font-size:12px; margin:0; border-color:rgba(255,255,255,0.4);">← Back to Portfolio</a>
+</nav>
+<!-- -------------------------------------------------------- -->
+
+<section class="l" data-s="r" data-k="0"><div class="p">
+<span class="n">Emergency app for Android</span>
+<h1>PULSE<span>EMERGENCY</span></h1>
+<p>One shake. One tap. Your live location and your help message reach your loved ones in seconds. Scroll to see how it protects you.</p>
+<div class="hint">SCROLL ↓</div></div></section>
+
+<section class="r" data-s="l" data-k="0" data-fx="hold"><div class="p">
+<span class="n">01 · The SOS button</span>
+<h2>Press and hold for 2 seconds.</h2>
+<p>The big SOS button on the Alert screen is all you need. Hold it for two seconds and an emergency alert goes out to every saved contact, along with your live location.</p>
+<ul class="d"><li>Hold the SOS button for 2 seconds on the Alert screen.</li><li>Every saved contact gets your help message together with your live location.</li><li>The alert is logged in History with a SENT status.</li></ul>
+<div class="chips"><i>Tap to send</i><i>Live location</i><i>All contacts</i></div></div></section>
+
+<section class="l" data-s="r" data-k="0" data-fx="shake"><div class="p">
+<span class="n">02 · Shake to alert</span>
+<h2>No need to even open the app.</h2>
+<p>In an accident or any emergency, just shake your phone hard. The motion sensor triggers the alert automatically, and your saved contacts get your live location and message. It needs a strong shake, so it will not fire by mistake.</p>
+<ul class="d"><li>Works in the background, so the app does not need to be open.</li><li>A strong shake is needed, so it will not fire by mistake.</li><li>Turn Shake to Alert on or off and adjust sensitivity right on the Alert screen.</li></ul>
+<div class="chips"><i>Works in the background</i><i>Adjustable sensitivity</i><i>Hands-free</i></div></div></section>
+
+<section class="r" data-s="l" data-k="3" data-fx="off"><div class="p">
+<span class="n">03 · Phone switched off?</span>
+<h2>Powered off? The alert still goes.</h2>
+<p>If your phone gets switched off, Pulse automatically sends your live location and a help message to your emergency contacts. You do not have to do anything.</p>
+<ul class="d"><li>When the phone is switched off, Pulse sends the alert on its own.</li><li>Your live location and help message go to your emergency contacts automatically.</li><li>You do not have to unlock or tap anything.</li></ul>
+<div class="chips"><i>Auto location</i><i>Auto help message</i></div></div></section>
+
+<section class="l" data-s="r" data-k="0" data-fx="boot"><div class="p">
+<span class="n">04 · Always ready</span>
+<h2>Turns on by itself. Barely touches your battery.</h2>
+<p>The moment your phone starts, Pulse starts quietly in the background. No need to open it again and again, and battery use stays very low.</p>
+<ul class="d"><li>Switch your phone on and Pulse starts quietly in the background by itself.</li><li>You never have to open the app again and again.</li><li>Battery use stays very low, so it runs all day without you noticing.</li></ul>
+<div class="chips"><i>Auto start on boot</i><i>Ultra low battery</i></div></div></section>
+
+<section class="r" data-s="l" data-k="1"><div class="p">
+<span class="n">05 · Contacts and your own message</span>
+<h2>Your words. Your people.</h2>
+<p>Save a name, a primary number and an optional secondary number. Write a custom message in your own words. That exact message, with your live location, is what your emergency contacts receive.</p>
+<ul class="d"><li>Save a name, a primary number and an optional secondary number.</li><li>Write your own help message in your own words.</li><li>Your saved contacts are listed in the app and can be removed any time.</li></ul>
+<div class="chips"><i>Custom message</i><i>Primary + secondary</i><i>Saved contacts</i></div></div></section>
+
+<section class="l" data-s="r" data-k="4" data-fx="status"><div class="p">
+<span class="n">06 · Smart status alerts</span>
+<h2>Low battery or no internet? You'll see it right away.</h2>
+<p>If your battery drops below 20%, a warning appears at the top of the Alert screen. If the internet is off, you get a notice that alerts will go as a plain SMS with coordinates. You always know your phone is ready.</p>
+<ul class="d"><li>Battery below 20%: a low battery warning shows at the top of the Alert screen.</li><li>No internet: a notice shows that alerts will go as a plain SMS with coordinates.</li><li>You know your phone is ready before an emergency happens.</li></ul>
+<div class="chips"><i>Battery below 20%</i><i>No internet notice</i><i>Always informed</i></div></div></section>
+
+<section class="r" data-s="l" data-k="0" data-fx="offline"><div class="p">
+<span class="n">07 · No internet? Still covered.</span>
+<h2>Offline alerts with coordinates.</h2>
+<p>If your net is off, Pulse attaches your last known location, or your GPS latitude and longitude, to a plain SMS and sends it. Help can still find you.</p>
+<ul class="d"><li>Pulse attaches your GPS latitude and longitude, or your last known location.</li><li>It goes as a plain SMS, so no mobile data is needed.</li><li>Your contacts get the coordinates and can find you.</li></ul>
+<div class="chips"><i>Plain SMS fallback</i><i>Lat / Long</i><i>Last location</i></div></div></section>
+
+<section class="l" data-s="r" data-k="2"><div class="p">
+<span class="n">08 · History</span>
+<h2>See every alert, any time.</h2>
+<p>The History tab lists recent alerts: who was alerted, on what date and at what time.</p>
+<ul class="d"><li>Every alert shows who was alerted.</li><li>The exact date and time of each alert.</li><li>A SENT status so you know it went out.</li></ul>
+<div class="chips"><i>Who</i><i>When</i><i>Status</i></div></div></section>
+
+<section class="r" data-s="l" data-k="0" data-fx="hold"><div class="p">
+<span class="n">Get Pulse</span>
+<h2>Want the app? Contact us for the download link.</h2>
+<p>Pulse. Because emergencies don't wait. Message or call and we will send you the download link.</p>
+<!-- --- UPDATED WHATSAPP BUTTON (Removed 'fill' class) --- -->
+<div class="btns"><a class="btn" href="https://wa.me/919936181621?text=Hi%2C%20I%20want%20the%20Pulse%20Emergency%20app%20download%20link." target="_blank" rel="noopener">WhatsApp us</a><a class="btn" href="tel:+919936181621">Call us</a></div>
+<!-- ------------------------------------------------------ -->
+<p style="margin-top:16px;font-size:13px">Built by Kartik Jaiswal, B.Tech CSE (Cybersecurity), DSATM Bengaluru.</p></div></section>
+
+<footer>© Kartik Jaiswal · Pulse Emergency</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var T=THREE,cv=document.getElementById('gl'),r;
+try{r=new T.WebGLRenderer({canvas:cv,antialias:true})}catch(e){return}
+r.setPixelRatio(Math.min(devicePixelRatio,2));r.setClearColor(0x070709);
+var s=new T.Scene();s.fog=new T.FogExp2(0x070709,.03);
+var cam=new T.PerspectiveCamera(45,1,.1,200);cam.position.set(0,0,10);
+s.add(new T.AmbientLight(0xffffff,.6));
+var dl=new T.DirectionalLight(0xffffff,1.1);dl.position.set(5,6,8);s.add(dl);
+var pl=new T.PointLight(0xffffff,1,40);pl.position.set(-6,2,4);s.add(pl);
+
+/* ---- app screens drawn as textures ---- */
+function scr(k){
+ var c=document.createElement('canvas');c.width=1040;c.height=2200;var g=c.getContext('2d');g.scale(2,2);
+ g.fillStyle=k==3?'#000':'#fff';g.fillRect(0,0,520,1100);
+ var t=new T.CanvasTexture(c);t.anisotropy=8;
+ if(k==3)return t;
+ function tx(q,x,y,z,w,col,al){g.font=w+' '+z+'px sans-serif';g.fillStyle=col||'#000';g.textAlign=al||'left';g.textBaseline='middle';g.fillText(q,x,y)}
+ function rr(x,y,w,h,q,f,st){g.beginPath();g.roundRect(x,y,w,h,q);if(f){g.fillStyle=f;g.fill()}if(st){g.strokeStyle=st;g.lineWidth=2.5;g.stroke()}}
+ function dot(x,y,r,f){g.fillStyle=f;g.beginPath();g.arc(x,y,r,0,6.283);g.fill()}
+ var A=(k==0||k==4),tab=A?0:k;
+ /* status bar + punch-hole camera */
+ tx('9:41',50,36,20,'700','#000');
+ rr(428,27,36,18,4,null,'#000');g.fillStyle=k==4?'#d93025':'#000';g.fillRect(431,30,k==4?6:26,12);g.fillStyle='#000';g.fillRect(466,32,3,8);
+ dot(260,36,10,'#000');
+ tx('PULSE EMERGENCY',260,104,34,'800','#000','center');
+ ['Alert','Contacts','History'].forEach(function(n,i){var x=100+i*160;tx(n,x,168,25,i==tab?'800':'400',i==tab?'#000':'#777','center');if(i==tab){g.fillStyle='#000';g.fillRect(x-24,196,48,4)}});
+ g.fillStyle='#eee';g.fillRect(36,214,448,2);
+ if(A){
+  if(k==4){
+   rr(36,236,448,92,18,'#fff1f0','#d93025');
+   rr(58,258,34,18,4,null,'#b3261e');g.fillStyle='#b3261e';g.fillRect(61,261,7,12);g.fillRect(93,263,3,8);
+   tx('Low battery · 18%',112,268,23,'800','#b3261e');tx('Charge soon so alerts keep working',112,302,17,'400','#7a2b25');
+   rr(36,342,448,110,18,'#f4f4f5','#111');
+   g.strokeStyle='#111';g.lineWidth=4;g.lineCap='round';[9,19,29].forEach(function(r){g.beginPath();g.arc(76,412,r,-2.35,-0.79);g.stroke()});
+   dot(76,412,3.5,'#111');g.strokeStyle='#d93025';g.beginPath();g.moveTo(52,382);g.lineTo(100,430);g.stroke();
+   tx('No internet',124,374,23,'800');tx('Alerts will send as plain SMS',124,408,17,'400','#444');tx('with coordinates.',124,432,17,'400','#444');
+  }else{
+   rr(150,250,220,44,22,'#f1f1f2');dot(178,272,6,'#1db954');tx('Protection active',196,272,18,'700','#222');
+  }
+  g.save();g.shadowColor='rgba(0,0,0,.35)';g.shadowBlur=30;g.shadowOffsetY=14;dot(260,670,140,'#000');g.restore();
+  tx('SOS',260,655,100,'800','#fff','center');tx('TAP TO SEND ALERT',260,745,19,'700','#fff','center');
+  rr(36,880,448,160,20,'#fff','#e5e5e5');tx('Shake to Alert',60,922,26,'800');rr(396,906,66,34,17,'#000');dot(445,923,13,'#fff');
+  tx('Sensitivity',60,992,19,'400','#555');rr(170,982,290,20,10,'#e2e2e2');rr(170,982,170,20,10,'#000');dot(340,992,15,'#000');dot(340,992,6,'#fff');
+ }
+ if(k==1){
+  [['NAME','e.g. Maa',262,76],['PRIMARY NUMBER','10-digit mobile number',352,76],['SECONDARY NUMBER','Optional',442,76],['CUSTOM MESSAGE','',532,130]].forEach(function(f){
+   rr(36,f[2],448,f[3],12,null,'#333');g.font='400 17px sans-serif';var w=g.measureText(f[0]).width;g.fillStyle='#fff';g.fillRect(48,f[2]-12,w+16,24);
+   tx(f[0],56,f[2],17,'400','#333');
+   if(f[3]>100){tx('I need help. Please track',58,f[2]+52,22,'400');tx('my live location.',58,f[2]+86,22,'400')}else tx(f[1],58,f[2]+40,22,'400','#aaa')});
+  rr(36,694,448,64,14,'#000');tx('SAVE',260,727,22,'800','#fff','center');
+  tx('SAVED CONTACTS',36,800,17,'800','#555');rr(36,822,448,96,14,'#fff','#ddd');
+  g.strokeStyle='#999';g.lineWidth=2;g.beginPath();g.arc(92,870,26,0,6.283);g.stroke();tx('K',92,871,22,'800','#000','center');
+  tx('kartik',136,858,25,'800');tx('9936181621 · Primary',136,892,18,'400','#555');tx('✕',456,870,24,'400','#333','center');
+ }
+ if(k==2){
+  tx('RECENT ALERTS',36,250,20,'800');
+  ['16 Oct 2026 • 06:51 PM','16 Oct 2026 • 06:51 PM','14 Sep 2026 • 07:46 PM','08 Sep 2026 • 07:46 PM','29 Aug 2026 • 09:56 PM','29 Aug 2026 • 09:54 PM'].forEach(function(d,i){
+   var y=278+i*114;rr(36,y,448,98,14,'#fff','#ddd');tx('Alert sent to 9936181621',56,y+32,23,'800');tx(d,56,y+68,18,'400','#555');
+   rr(396,y+16,72,32,6,'#eee');tx('SENT',432,y+32,14,'800','#000','center')});
+ }
+ return t;
+}
+var TX=[scr(0),scr(1),scr(2),scr(3),scr(4)];
+
+/* ---- phone ---- */
+function rrs(w,h,q){var p=new T.Shape(),x=-w/2,y=-h/2;p.moveTo(x+q,y);p.lineTo(x+w-q,y);p.quadraticCurveTo(x+w,y,x+w,y+q);p.lineTo(x+w,y+h-q);p.quadraticCurveTo(x+w,y+h,x+w-q,y+h);p.lineTo(x+q,y+h);p.quadraticCurveTo(x,y+h,x,y+h-q);p.lineTo(x,y+q);p.quadraticCurveTo(x,y,x+q,y);return p}
+var ph=new T.Group(),inner=new T.Group();ph.add(inner);s.add(ph);
+var bg=new T.ExtrudeGeometry(rrs(2.3,4.7,.34),{depth:.2,bevelEnabled:true,bevelSize:.04,bevelThickness:.04,bevelSegments:2});
+var body=new T.Mesh(bg,new T.MeshStandardMaterial({color:0x15151a,roughness:.35,metalness:.7}));body.position.z=-.1;
+body.add(new T.LineSegments(new T.EdgesGeometry(bg,30),new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.35})));
+inner.add(body);
+var SW=2.12,SH=4.485,sg=new T.ShapeGeometry(rrs(SW,SH,.27),16),sp2=sg.attributes.position,su=sg.attributes.uv;
+for(var i=0;i<sp2.count;i++)su.setXY(i,(sp2.getX(i)+SW/2)/SW,(sp2.getY(i)+SH/2)/SH);
+var sm=new T.MeshBasicMaterial({map:TX[0]});var sc=new T.Mesh(sg,sm);sc.position.z=.15;inner.add(sc);
+var btm=new T.MeshStandardMaterial({color:0x2a2a31,roughness:.4,metalness:.8});
+[[.7,.7],[1.5,.9]].forEach(function(b){var m=new T.Mesh(new T.BoxGeometry(.05,b[1]*.6,.12),btm);m.position.set(1.17,b[0],0);inner.add(m)});
+
+/* ripples */
+var rp=[];for(var i=0;i<3;i++){var q=new T.Mesh(new T.TorusGeometry(1.9,.014,8,90),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));q.userData.o=i/3;inner.add(q);rp.push(q)}
+
+
+/* hold-progress ring around SOS */
+var ring=new T.Group();for(var i=0;i<48;i++){var a=-Math.PI/2-i/48*6.2832,d=new T.Mesh(new T.SphereGeometry(.024,8,8),new T.MeshBasicMaterial({color:0xffffff}));d.position.set(Math.cos(a)*.72,-.489+Math.sin(a)*.72,.22);ring.add(d)}
+ring.visible=false;inner.add(ring);
+
+/* fx: pin + flying messages (off) */
+var fxOff=new T.Group(),pin=new T.Group();
+pin.add(new T.Mesh(new T.SphereGeometry(.3,20,20),new T.MeshStandardMaterial({color:0xffffff,roughness:.3})));
+var cone=new T.Mesh(new T.ConeGeometry(.22,.55,20),new T.MeshStandardMaterial({color:0xffffff}));cone.rotation.x=Math.PI;cone.position.y=-.4;pin.add(cone);
+pin.position.set(0,3.2,.4);fxOff.add(pin);
+var fxMsg=new T.Group();inner.add(fxMsg);var msgs=[];for(var i=0;i<4;i++){var m=new T.Mesh(new T.BoxGeometry(.7,.38,.05),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));m.userData.o=i/4;fxMsg.add(m);msgs.push(m)}
+inner.add(fxOff);
+
+/* fx: battery (boot) */
+var fxBat=new T.Group();
+var bo=new T.Mesh(new T.BoxGeometry(1.6,.8,.1),new T.MeshStandardMaterial({color:0x15151a}));
+bo.add(new T.LineSegments(new T.EdgesGeometry(bo.geometry),new T.LineBasicMaterial({color:0xffffff})));fxBat.add(bo);
+var cap=new T.Mesh(new T.BoxGeometry(.12,.3,.1),new T.MeshBasicMaterial({color:0xffffff}));cap.position.x=.88;fxBat.add(cap);
+var fill=new T.Mesh(new T.BoxGeometry(1.4,.6,.12),new T.MeshBasicMaterial({color:0xffffff,transparent:true}));fill.position.z=.02;fxBat.add(fill);
+fxBat.position.set(1.9,1.6,.5);inner.add(fxBat);
+
+
+/* fx: no-internet icon (globe with slash) */
+var fxWifi=new T.Group(),wm=new T.MeshBasicMaterial({color:0xffffff});
+fxWifi.add(new T.Mesh(new T.TorusGeometry(.5,.04,8,56),wm));
+var mer=new T.Mesh(new T.TorusGeometry(.5,.035,8,56),wm);mer.scale.x=.42;fxWifi.add(mer);
+[[0,1],[.27,.84],[-.27,.84]].forEach(function(l){var q=new T.Mesh(new T.BoxGeometry(l[1],.045,.05),wm);q.position.y=l[0];fxWifi.add(q)});
+var slash=new T.Mesh(new T.BoxGeometry(.08,1.5,.06),new T.MeshBasicMaterial({color:0xff5a52,transparent:true}));slash.rotation.z=-Math.PI/4;fxWifi.add(slash);
+fxWifi.position.set(-.95,3.15,.5);inner.add(fxWifi);
+
+/* fx: coordinates (offline) */
+var cc=document.createElement('canvas');cc.width=640;cc.height=160;var cg=cc.getContext('2d');
+cg.fillStyle='rgba(8,8,12,.92)';cg.beginPath();cg.roundRect(4,4,632,152,26);cg.fill();cg.strokeStyle='#fff';cg.lineWidth=3;cg.stroke();
+cg.fillStyle='#9a9aa6';cg.font='600 24px sans-serif';cg.textAlign='center';cg.fillText('SMS · LAST KNOWN LOCATION',320,52);
+cg.fillStyle='#fff';cg.font='800 42px sans-serif';cg.fillText('12.9716° N, 77.5946° E',320,112);
+var fxOffl=new T.Mesh(new T.PlaneGeometry(3.4,.85),new T.MeshBasicMaterial({map:new T.CanvasTexture(cc),transparent:true}));
+fxOffl.position.set(0,-3,.6);inner.add(fxOffl);
+
+/* background */
+var N=700,pa=new Float32Array(N*3);for(var i=0;i<N;i++){pa[i*3]=(Math.random()-.5)*50;pa[i*3+1]=(Math.random()-.5)*30;pa[i*3+2]=-Math.random()*40}
+var pg=new T.BufferGeometry();pg.setAttribute('position',new T.BufferAttribute(pa,3));
+var dots=new T.Points(pg,new T.PointsMaterial({color:0xffffff,size:.07,transparent:true,opacity:.5}));s.add(dots);
+var big=[];for(var i=0;i<8;i++){var b=new T.Mesh(new T.TorusGeometry(7+i*1.6,.02,6,90),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.14}));b.position.z=-6-i*4;s.add(b);big.push(b)}
+var grid=new T.GridHelper(120,60,0x444444,0x181818);grid.position.y=-5;s.add(grid);
+
+/* scroll logic */
+var secs=[].slice.call(document.querySelectorAll('section')),cur=-1,p=0,sp=0,mx=0,my=0,fx='',shk=0;
+addEventListener('scroll',function(){var m=document.documentElement.scrollHeight-innerHeight;p=m>0?scrollY/m:0},{passive:true});
+addEventListener('pointermove',function(e){mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+function rs(){r.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.2});
+setTimeout(function(){document.querySelectorAll('.p').forEach(function(e){io.observe(e)})},2300);
+var dotsEl=[],dw=document.createElement('div');dw.id='dots';
+secs.forEach(function(e,i){var b=document.createElement('button');b.setAttribute('aria-label','Go to section '+(i+1));b.onclick=function(){e.scrollIntoView({behavior:'smooth',block:'center'})};dw.appendChild(b);dotsEl.push(b)});
+document.body.appendChild(dw);
+
+
+var T0=-1;
+function loop(t){
+ requestAnimationFrame(loop);t*=.001;if(T0<0)T0=t;var ti=t-T0,en=Math.min(Math.max((ti-1.7)/1.8,0),1),ez=1-Math.pow(1-en,3);
+ var mob=innerWidth<860,best=0,bd=1e9;
+ secs.forEach(function(e,i){var b=e.getBoundingClientRect(),d=Math.abs(b.top+b.height/2-innerHeight/2);if(d<bd){bd=d;best=i}});
+ var el=secs[best];
+ if(best!==cur){cur=best;sm.map=TX[+el.dataset.k];sm.needsUpdate=true;fx=el.dataset.fx||'';shk=1;dotsEl.forEach(function(d,i){d.classList.toggle('on',i==best)})}
+ var side=el.dataset.s==='r'?1:-1;
+ var tx=mob?0:side*2.9,ty=mob?1.5:0,ts=(mob?.55:1)*(1+shk*.06);shk*=.94;cam.position.z+=(10-shk*1.2-cam.position.z)*.2;
+ ph.position.x+=(tx-ph.position.x)*.07;ph.position.y+=(ty-ph.position.y)*.07;
+ ph.scale.setScalar(ph.scale.x+(ts-ph.scale.x)*.07);
+ var ry=-side*.45+mx*.5+Math.sin(t*.6)*.08;
+ ph.rotation.y+=(ry-ph.rotation.y)*.06;ph.rotation.x+=((my*.25)-ph.rotation.x)*.06;
+ inner.position.y=Math.sin(t*1.1)*.12;ph.position.z=(1-ez)*-14;inner.rotation.y=(1-ez)*6.2832;
+ /* shake */
+ var shaking=fx==='shake';
+ inner.rotation.z=shaking?Math.sin(t*38)*.09:0;inner.position.x=shaking?Math.sin(t*47)*.07:0;
+ /* ripples (faster when hold / shake) */
+ var spd=(fx==='hold'||shaking)?.9:.3;
+ rp.forEach(function(q){var u=(t*spd+q.userData.o)%1;q.scale.setScalar(.8+u*1.3);q.material.opacity=(1-u)*(fx==='hold'||shaking?.7:.25)});
+ /* fx visibility */
+ fxOff.visible=fx==='off';fxBat.visible=fx==='boot'||fx==='status';fxWifi.visible=fx==='status';fxOffl.visible=fx==='offline';
+ if(fx==='off'){pin.position.y=3.2+Math.sin(t*2.5)*.15;pin.rotation.y=t}
+ fxMsg.visible=fx==='off'||fx==='hold'||fx==='shake';
+ if(fxMsg.visible)msgs.forEach(function(m){var u=(t*.5+m.userData.o)%1;m.position.set(-side*(.5+u*3.6),.6+Math.sin(u*6)*.3,.6);m.material.opacity=Math.sin(u*3.1416)*.9});
+ ring.visible=fx==='hold';
+ if(fx==='hold'){var pr=Math.min((t%3)/2,1);ring.children.forEach(function(d,i){d.visible=i<Math.floor(pr*48)});ring.scale.setScalar(1+(pr>=1?Math.sin(((t%3)-2)*3.1416)*.07:0))}
+ if(fx==='boot'){fxBat.position.set(0,3.15,.5);fill.material.color.set(0xffffff);fill.material.opacity=1;fill.scale.x=.12+Math.sin(t*1.5)*.02;fill.position.x=-.7+(1.4*fill.scale.x)/2;fxBat.rotation.y=Math.sin(t)*.3}
+ if(fx==='status'){fxBat.position.set(.95,3.15,.5);fill.material.color.set(0xff5a52);fill.scale.x=.18;fill.position.x=-.7+(1.4*.18)/2;fill.material.opacity=.55+.45*Math.sin(t*6);fxBat.rotation.y=Math.sin(t)*.3;fxWifi.rotation.y=Math.sin(t+1)*.3;slash.material.opacity=.55+.45*Math.sin(t*6+1.5)}
+ fxOffl.position.x+=(-side*.9-fxOffl.position.x)*.08;fxOffl.position.y=-3+Math.sin(t*1.6)*.08;
+ /* world */
+ sp+=(p-sp)*.06;dots.rotation.y=sp*1.5+(1-ez)*2.5;dots.position.z=sp*6;
+ big.forEach(function(b,i){b.rotation.z=t*.12*(i%2?1:-1)+i});grid.position.z=sp*-10;
+ cam.position.x+=(mx*1.2-cam.position.x)*.04;cam.position.y+=(-my*.8-cam.position.y)*.04;cam.lookAt(0,0,0);
+ document.getElementById('bar').style.transform='scaleX('+sp+')';
+ r.render(s,cam)}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
